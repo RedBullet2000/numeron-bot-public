@@ -49,7 +49,7 @@ class Battlemode(commands.Cog):
         await ctx.channel.purge(limit=1)
         if self.bot.game.status == 'playing':
             await ctx.send('ゲームが進行中につき、プレイヤーデータを変更することはできません。')
-            
+        
         else:
             player.json_remove()
             await ctx.send('ゲームを終了し、プレーヤーデータをリセットしました。')
