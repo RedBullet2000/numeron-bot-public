@@ -1,7 +1,7 @@
-import discord
 from discord.ext import commands
 
 from cogs.utils import game
+from cogs.utils import views_solomode as views
 
 
 class Solomode(commands.Cog):
@@ -16,11 +16,8 @@ class Solomode(commands.Cog):
 
         await ctx.channel.purge(limit=1)
         generated_num_tuple = game.generate_num()
-        embed = discord.Embed(title='Numer0n(ヌメロン) | ソロモード',
-                              description='3桁の数字を生成しました。10回以内に当ててください！\n三桁の数字を入力してください↓ ※但し、すべての桁が異なる数字である事。',
-                              color=ctx.author.color)
-        embed.set_footer(text='endと入力する事でゲームを中断します。')
-        UI = await ctx.send(embed=embed)
+        answer = ''.join(map(str, generated_num_tuple))
+        UI = await ctx.send(embed=views.embed_start(ctx))
 
         def check_msg(msg):
             return msg.author == ctx.author
@@ -52,39 +49,15 @@ class Solomode(commands.Cog):
 
             if eat_bite[0] == 3:
                 """EATが3の時に処理を終了"""
-                embed_result_field = ''
-                times = 1
-
-                answer = ''.join(map(str, generated_num_tuple))
-                embed_result = discord.Embed(title='Numer0n(ヌメロン) | ソロモード',
-                                             description=f'{i}回目でゲームクリア！ | 答え: **{answer}**',
-                                             color=ctx.author.color)
-                embed_result.set_footer(text=f"{ctx.author}'s result", icon_url=ctx.author.avatar_url)
-                while True:
-                    if times == len(result):
-                        break
-                    embed_result_field += f'{times}回目 | {result[times]}\n'
-                    times += 1
-                embed_result.add_field(name='対戦結果', value=embed_result_field, inline=False)
-                await UI.edit(embed=embed_result)
+                await UI.edit(embed=views.embed_gameclear(ctx, i, answer, result))
                 break
 
             elif i >= 10:
                 """10回試行したら処理を終了"""
-                answer = ''.join(map(str, generated_num_tuple))
-                embed_gameover = discord.Embed(title='Numer0n(ヌメロン) | ソロモード',
-                                               description=f'10回以内に当てることが出来なかった。ゲームオーバー！ | 答え: **{answer}**',
-                                               color=ctx.author.color)
-                embed_gameover.set_footer(text=f"{ctx.author}'s result", icon_url=ctx.author.avatar_url)
-                await UI.edit(embed=embed_gameover)
+                await UI.edit(embed=views.embed_gameover(ctx, answer))
                 break
 
-            embed = discord.Embed(title='Numer0n(ヌメロン) | ソロモード',
-                                  description=f'{i}回目: {predicted_num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**\n'
-                                              f'三桁の数字を入力してください↓',
-                                  color=ctx.author.color)
-            embed.set_footer(text='endと入力する事でゲームを中断します。')
-            await UI.edit(embed=embed)
+            await UI.edit(embed=views.embed_gameplay(ctx, i, predicted_num, eat_bite))
 
 
 def setup(bot):
