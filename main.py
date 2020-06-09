@@ -6,6 +6,8 @@ from pathlib import Path
 import discord
 from discord.ext import commands
 
+from cogs.utils.game import Game
+
 cwd = Path(__file__).parents[0]
 cwd = str(cwd)
 print(f'{cwd}\n----')
@@ -17,6 +19,8 @@ bot.cwd = cwd
 with open('secret.json', 'r') as token:
     secret = json.load(token)
     TOKEN = secret["TOKEN"]
+
+bot.game = Game()
 
 
 @bot.event

@@ -1,6 +1,11 @@
 import random
 
 
+class Game:
+    def __init__(self):
+        self.status = 'nothing'
+
+
 def generate_num():
     """ランダムな3桁の数字をタプルに入れて生成"""
     while True:
