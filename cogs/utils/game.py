@@ -1,9 +1,13 @@
 import random
 
+from cogs.utils.player import Player, Players
+
 
 class Game:
     def __init__(self):
         self.status = 'nothing'
+        self.channel = None
+        self.players = Players()
 
 
 def generate_num():
