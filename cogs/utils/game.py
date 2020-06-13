@@ -6,6 +6,7 @@ from cogs.utils.player import Player, Players
 class Game:
     def __init__(self):
         self.status = 'nothing'
+        self.stage = 'idle'
         self.channel = None
         self.players = Players()
 

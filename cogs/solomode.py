@@ -17,7 +17,7 @@ class Solomode(commands.Cog):
         await ctx.channel.purge(limit=1)
         generated_num_tuple = game.generate_num()
         answer = ''.join(map(str, generated_num_tuple))
-        UI = await ctx.send(embed=views.embed_start(ctx))
+        UI = await ctx.author.send(embed=views.embed_start(ctx))
 
         def check_msg(msg):
             return msg.author == ctx.author
@@ -33,14 +33,14 @@ class Solomode(commands.Cog):
 
             if str.isdecimal(predicted_num.content) is not True:
                 """数字でないものが入力されたら処理を中断"""
-                await ctx.send('数字以外を入力することは出来ません。もう一度入力し直して下さい。')
+                await UI.edit(embed=views.embed_notification_isnotnum(ctx))
                 continue
 
             predicted_num_tuple = game.make_tuple(predicted_num)
 
             if game.check_duplication(predicted_num_tuple) is not True:
                 """数字が重複したら処理を中断"""
-                await ctx.send('数字を重複して入力することは出来ません。もう一度入力し直して下さい。')
+                await UI.edit(embed=views.embed_notification_duplication(ctx))
                 continue
 
             eat_bite = game.check_num(generated_num_tuple, predicted_num_tuple)
