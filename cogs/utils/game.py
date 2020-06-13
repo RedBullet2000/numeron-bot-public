@@ -1,6 +1,6 @@
 import random
 
-from cogs.utils.player import Player, Players
+from cogs.utils.player import Players
 
 
 class Game:
