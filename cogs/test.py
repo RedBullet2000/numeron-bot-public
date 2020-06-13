@@ -102,7 +102,6 @@ class Test(commands.Cog):
         answer_2 = ''.join(map(str, player_2.num))
         result_1 = {}
         result_2 = {}
-        self.bot.game.stage = 'player1'
         i = 0
 
         def check_user_1(msg):
@@ -114,7 +113,7 @@ class Test(commands.Cog):
         while True:
             i += 1
 
-            if self.bot.game.stage == 'player1':
+            while True:
                 """player1の処理"""
                 await user_1.send(embed=views.embed_notification(ctx, user_2))
                 num = await self.bot.wait_for("message", check=check_user_1, timeout=None)
@@ -140,11 +139,10 @@ class Test(commands.Cog):
                         self.bot.game = Game()
                         break
 
-                    await user_1.send(embed=views.embed_eatbite(ctx, i, num.content, eat_bite[0], eat_bite[1]))
-                    self.bot.game.stage = 'player2'
+                    await user_1.send(embed=views.embed_eatbite(ctx, i, num, eat_bite[0], eat_bite[1]))
                     break
 
-            if self.bot.game.stage == 'player2':
+            while True:
                 """player2の処理"""
                 await user_2.send(embed=views.embed_notification(ctx, user_1))
                 num = await self.bot.wait_for("message", check=check_user_2, timeout=None)
@@ -170,8 +168,7 @@ class Test(commands.Cog):
                         self.bot.game = Game()
                         break
 
-                    await user_2.send(embed=views.embed_eatbite(ctx, i, num.content, eat_bite[0], eat_bite[1]))
-                    self.bot.game.stage = 'player1'
+                    await user_2.send(embed=views.embed_eatbite(ctx, i, num, eat_bite[0], eat_bite[1]))
                     break
 
     @commands.command()
