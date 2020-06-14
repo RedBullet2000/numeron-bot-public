@@ -36,7 +36,7 @@ secret.jsonの中身は、以下の通りとします。
 }
 ```
 ※BOTのTOKENは、Discord公式のDeveloper PortalでBotユーザーを作成することにより発行できます。
- 
+
 #Directory Structure
 
 ```bash
