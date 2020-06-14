@@ -64,6 +64,7 @@ class Battlemode(commands.Cog):
             return await ctx.send("人数がゲーム開始人数に満たないため、ゲームを開始できません。")
         self.bot.game.status = 'playing'
         await ctx.send('ゲームを開始します。')
+
         for i in range(len(self.bot.game.players)):
             player = self.bot.game.players[i]
             user = self.bot.get_user(player.id)
@@ -102,7 +103,9 @@ class Battlemode(commands.Cog):
         answer_2 = ''.join(map(str, player_2.num))
         result_1 = {}
         result_2 = {}
-        i = 0
+        i_1 = 0
+        i_2 = 0
+        self.bot.game.stage = 'player1'
 
         def check_user_1(msg):
             return msg.author == user_1 and msg.channel.type == discord.ChannelType.private
@@ -111,65 +114,76 @@ class Battlemode(commands.Cog):
             return msg.author == user_2 and msg.channel.type == discord.ChannelType.private
 
         while True:
-            i += 1
+            if self.bot.game.stage == 'gameend':
+                """ゲームステージがgameendの時にゲームをリセットし、ループを抜ける"""
+                self.bot.game = Game()
+                break
 
-            while True:
-                """player1の処理"""
-                await user_1.send(embed=views.embed_notification(ctx, user_2))
-                num = await self.bot.wait_for("message", check=check_user_1, timeout=None)
-                user_1_predicted_num_tuple = game.make_tuple(num)
+            if self.bot.game.stage == 'player1':
+                while True:
+                    """player1の処理"""
+                    await user_1.send(embed=views.embed_notification(ctx, user_2))
+                    num = await self.bot.wait_for("message", check=check_user_1, timeout=None)
+                    user_1_predicted_num_tuple = game.make_tuple(num)
 
-                if str.isdecimal(num.content) is not True:
-                    """数字でないものが入力されたら処理を中断"""
-                    await user_1.send(embed=views.embed_notification_isnotnum(ctx))
-                    continue
+                    if str.isdecimal(num.content) is not True:
+                        """数字でないものが入力されたら処理を中断"""
+                        await user_1.send(embed=views.embed_notification_isnotnum(ctx))
+                        continue
 
-                elif game.check_duplication(user_1_predicted_num_tuple) is not True:
-                    """数字が重複したら処理を中断"""
-                    await user_1.send(embed=views.embed_notification_duplication(ctx))
-                    continue
+                    elif game.check_duplication(user_1_predicted_num_tuple) is not True:
+                        """数字が重複したら処理を中断"""
+                        await user_1.send(embed=views.embed_notification_duplication(ctx))
+                        continue
 
-                else:
-                    eat_bite = game.check_num(player_2.num, user_1_predicted_num_tuple)
-                    result_1[i] = f'{num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**'
+                    else:
+                        i_1 += 1
+                        eat_bite = game.check_num(player_2.num, user_1_predicted_num_tuple)
+                        result_1[i_1] = f'{num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**'
 
-                    if eat_bite[0] == 3:
-                        await user_1.send(embed=views.embed_gameend(ctx, user_1, result_1, answer_2, 'win'))
-                        await user_2.send(embed=views.embed_gameend(ctx, user_1, result_2, answer_1, 'lose'))
-                        self.bot.game = Game()
+                        if eat_bite[0] == 3:
+                            """勝敗判定"""
+                            await user_1.send(embed=views.embed_gameend(ctx, user_1, result_1, answer_2, 'win'))
+                            await user_2.send(embed=views.embed_gameend(ctx, user_1, result_2, answer_1, 'lose'))
+                            self.bot.game.stage = 'gameend'
+                            break
+
+                        await user_1.send(embed=views.embed_eatbite(ctx, i_1, num, eat_bite[0], eat_bite[1]))
+                        self.bot.game.stage = 'player2'
                         break
 
-                    await user_1.send(embed=views.embed_eatbite(ctx, i, num, eat_bite[0], eat_bite[1]))
-                    break
+            if self.bot.game.stage == 'player1':
+                while True:
+                    """player2の処理"""
+                    await user_2.send(embed=views.embed_notification(ctx, user_1))
+                    num = await self.bot.wait_for("message", check=check_user_2, timeout=None)
+                    user_2_predicted_num_tuple = game.make_tuple(num)
 
-            while True:
-                """player2の処理"""
-                await user_2.send(embed=views.embed_notification(ctx, user_1))
-                num = await self.bot.wait_for("message", check=check_user_2, timeout=None)
-                user_2_predicted_num_tuple = game.make_tuple(num)
+                    if str.isdecimal(num.content) is not True:
+                        """数字でないものが入力されたら処理を中断"""
+                        await user_2.send(embed=views.embed_notification_isnotnum(ctx))
+                        continue
 
-                if str.isdecimal(num.content) is not True:
-                    """数字でないものが入力されたら処理を中断"""
-                    await user_2.send(embed=views.embed_notification_isnotnum(ctx))
-                    continue
+                    elif game.check_duplication(user_2_predicted_num_tuple) is not True:
+                        """数字が重複したら処理を中断"""
+                        await user_2.send(embed=views.embed_notification_duplication(ctx))
+                        continue
 
-                elif game.check_duplication(user_2_predicted_num_tuple) is not True:
-                    """数字が重複したら処理を中断"""
-                    await user_2.send(embed=views.embed_notification_duplication(ctx))
-                    continue
+                    else:
+                        i_2 += 1
+                        eat_bite = game.check_num(player_1.num, user_2_predicted_num_tuple)
+                        result_2[i_2] = f'{num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**'
 
-                else:
-                    eat_bite = game.check_num(player_1.num, user_2_predicted_num_tuple)
-                    result_2[i] = f'{num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**'
+                        if eat_bite[0] == 3:
+                            """勝敗判定"""
+                            await user_2.send(embed=views.embed_gameend(ctx, user_2, result_2, answer_1, 'win'))
+                            await user_1.send(embed=views.embed_gameend(ctx, user_2, result_1, answer_2, 'lose'))
+                            self.bot.game.stage = 'gameend'
+                            break
 
-                    if eat_bite[0] == 3:
-                        await user_2.send(embed=views.embed_gameend(ctx, user_2, result_2, answer_1, 'win'))
-                        await user_1.send(embed=views.embed_gameend(ctx, user_2, result_1, answer_2, 'lose'))
-                        self.bot.game = Game()
+                        await user_2.send(embed=views.embed_eatbite(ctx, i_2, num, eat_bite[0], eat_bite[1]))
+                        self.bot.game.stage = 'player1'
                         break
-
-                    await user_2.send(embed=views.embed_eatbite(ctx, i, num, eat_bite[0], eat_bite[1]))
-                    break
 
     @commands.command()
     async def set_nothing(self, ctx):

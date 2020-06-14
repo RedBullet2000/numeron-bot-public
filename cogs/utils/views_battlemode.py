@@ -35,9 +35,9 @@ def embed_eatbite(ctx, i, num, eat, bite):
 
 def embed_notification(ctx, enemy):
     embed = discord.Embed(title=':bell:通知',
-                          description=f'あなたの番です。{enemy.name}さんの3桁の数字を当ててください。\n'
-                                      f'三桁の数字を入力してください↓',
+                          description=f'あなたの番です。{enemy.name}さんの3桁の数字を当ててください。',
                           color=ctx.author.color)
+    embed.set_footer(text='三桁の数字を入力してください↓')
     embed.set_author(name='Numer0n(ヌメロン) - バトルモード')
     return embed
 
@@ -46,6 +46,7 @@ def embed_notification_duplication(ctx):
     embed = discord.Embed(title=':bell:通知',
                           description=f'数字を重複して入力することは出来ません。もう一度入力し直して下さい。',
                           color=ctx.author.color)
+    embed.set_footer(text='三桁の数字を入力してください↓')
     embed.set_author(name='Numer0n(ヌメロン) - バトルモード')
     return embed
 
@@ -54,5 +55,6 @@ def embed_notification_isnotnum(ctx):
     embed = discord.Embed(title=':bell:通知',
                           description=f'数字以外を入力することは出来ません。もう一度入力し直して下さい。',
                           color=ctx.author.color)
+    embed.set_footer(text='三桁の数字を入力してください↓')
     embed.set_author(name='Numer0n(ヌメロン) - バトルモード')
     return embed
