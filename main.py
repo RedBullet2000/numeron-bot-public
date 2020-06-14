@@ -40,7 +40,8 @@ async def help(ctx):
                           color=0xff80ff)
     embed.timestamp = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     embed.set_author(name=bot.user.name, icon_url=bot.user.avatar_url)
-    embed.add_field(name='コマンド', value='`rule`,`solo`,`vs`,')
+    embed.add_field(name='コマンド', value='`rule`,`solo`,`create`,`join`,`leave`,`start`,`set_nothing`,`set_playing`,'
+                                       '`game_status`')
     embed.set_footer(text=f"{bot.user.name}, Made by Red_Bullet/ブルさん*#9592", icon_url=bot.user.avatar_url)
     await ctx.send(embed=embed)
 

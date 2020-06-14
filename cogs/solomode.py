@@ -24,11 +24,10 @@ class Solomode(commands.Cog):
 
         while True:
             predicted_num = await self.bot.wait_for("message", check=check_msg, timeout=None)
-            await ctx.channel.purge(limit=1)
 
             if predicted_num.content == 'end':
                 """endと入力されたら処理を終了"""
-                await ctx.send('ゲームを終了しました。')
+                await ctx.author.send('ゲームを終了しました。')
                 break
 
             if str.isdecimal(predicted_num.content) is not True:

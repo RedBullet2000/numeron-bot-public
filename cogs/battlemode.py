@@ -11,7 +11,7 @@ class Battlemode(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(aliases=['make'])
     async def create(self, ctx):
         if self.bot.game.status == 'playing':
             await ctx.send('ゲーム中です。')
@@ -20,10 +20,9 @@ class Battlemode(commands.Cog):
             await ctx.send('既に参加者募集中です。')
             return
         self.bot.game.status = 'waiting'
-        self.bot.game.channel = ctx.channel
         await ctx.send('参加者の募集を開始しました。')
 
-    @commands.command()
+    @commands.command(aliases=['enter'])
     async def join(self, ctx):
         if self.bot.game.status == "nothing":
             return await ctx.send("現在ゲームはありません。")
@@ -39,7 +38,7 @@ class Battlemode(commands.Cog):
         self.bot.game.players.append(player)
         await ctx.send(f"{member.mention}さんが参加しました。")
 
-    @commands.command()
+    @commands.command(aliases=['remove'])
     async def leave(self, ctx):
         if self.bot.game.status == "nothing":
             return await ctx.send("現在ゲームはありません。")
@@ -51,6 +50,22 @@ class Battlemode(commands.Cog):
                 self.bot.game.players.remove(p)
                 return await ctx.send(f"{member.mention}さんがゲームから退出しました。")
         return await ctx.send("ゲームに参加していません。")
+
+    @commands.command(aliases=['players'])
+    async def player(self, ctx):
+        player_fields = ''
+        if self.bot.game.status == "nothing":
+            return await ctx.send("現在ゲームはありません。")
+        else:
+            for i in range(len(self.bot.game.players)):
+                player = self.bot.game.players[i]
+                user = self.bot.get_user(player.id)
+                player_fields += user.name + '\n'
+            embed = discord.Embed(title=f':busts_in_silhouette: 現在参加中のプレイヤー | {len(self.bot.game.players)}/2',
+                                  description=player_fields,
+                                  color=ctx.author.color)
+            embed.set_author(name='Numer0n(ヌメロン) - バトルモード')
+            await ctx.send(embed=embed)
 
     @commands.command()
     async def start(self, ctx):
