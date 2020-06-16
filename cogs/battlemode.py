@@ -91,7 +91,6 @@ class Battlemode(commands.Cog):
             while True:
                 num = await self.bot.wait_for("message", check=check_user, timeout=None)
                 user_num_tuple = game.make_tuple(num)
-                player.set_num(user_num_tuple)
 
                 if str.isdecimal(num.content) is not True:
                     """数字でないものが入力されたら処理を中断"""
@@ -104,22 +103,27 @@ class Battlemode(commands.Cog):
                     continue
 
                 else:
-                    embed = discord.Embed(title='Numer0n(ヌメロン) | バトルモード',
-                                          description=f'あなたの数字は「**{num.content}**」です。',
-                                          color=ctx.author.color)
-                    await user.send(embed=embed)
-                    break
+                    notice_num = await user.send(embed=views.embed_notification_selfnum_check(ctx, num))
+                    await notice_num.add_reaction('⭕')
+                    await notice_num.add_reaction('❌')
+                    reaction, reaction_user = await self.bot.wait_for('reaction_add',
+                                                                      check=lambda reaction, reaction_user: reaction_user.id == player.id)
+                    if reaction.emoji == '⭕':
+                        await user.send(embed=views.embed_notification_selfnum(ctx, num))
+                        player.set_num(user_num_tuple)
+                        break
+                    elif reaction.emoji == '❌':
+                        await user.send('もう一度重複なしの3桁の数字を入力してください。入力した数字があなたの数字となります。')
+                        continue
+                    else:
+                        await user.send('無効なリアクションです。数字を入力し直してください。')
+                        continue
 
         player_1 = self.bot.game.players[0]
         player_2 = self.bot.game.players[1]
         user_1 = self.bot.get_user(player_1.id)
         user_2 = self.bot.get_user(player_2.id)
-        answer_1 = ''.join(map(str, player_1.num))
-        answer_2 = ''.join(map(str, player_2.num))
-        result_1 = {}
-        result_2 = {}
-        i_1 = 0
-        i_2 = 0
+
         self.bot.game.stage = 'player1'
 
         def check_user_1(msg):
@@ -137,7 +141,7 @@ class Battlemode(commands.Cog):
             if self.bot.game.stage == 'player1':
                 while True:
                     """player1の処理"""
-                    await user_1.send(embed=views.embed_notification(ctx, user_2))
+                    await user_1.send(embed=views.embed_notification_turn(ctx, user_2))
                     num = await self.bot.wait_for("message", check=check_user_1, timeout=None)
                     user_1_predicted_num_tuple = game.make_tuple(num)
 
@@ -152,25 +156,30 @@ class Battlemode(commands.Cog):
                         continue
 
                     else:
-                        i_1 += 1
                         eat_bite = game.check_num(player_2.num, user_1_predicted_num_tuple)
-                        result_1[i_1] = f'{num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**'
 
                         if eat_bite[0] == 3:
                             """勝敗判定"""
-                            await user_1.send(embed=views.embed_gameend(ctx, user_1, result_1, answer_2, 'win'))
-                            await user_2.send(embed=views.embed_gameend(ctx, user_1, result_2, answer_1, 'lose'))
+                            if len(player_1.results) == 0 or len(player_2.results) == 0:
+                                """One Call"""
+                                await user_1.send(embed=views.embed_gameend_onecall(ctx, user_1, player_2.answer, 'win'))
+                                await user_2.send(embed=views.embed_gameend_onecall(ctx, user_1, player_1.answer, 'lose'))
+                            else:
+                                await user_1.send(embed=views.embed_gameend(ctx, user_1, player_1.results, player_2.answer, 'win'))
+                                await user_2.send(embed=views.embed_gameend(ctx, user_1, player_2.results, player_1.answer, 'lose'))
                             self.bot.game.stage = 'gameend'
                             break
 
-                        await user_1.send(embed=views.embed_eatbite(ctx, i_1, num, eat_bite[0], eat_bite[1]))
+                        player_1.add_times()
+                        player_1.add_result(f'{num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**')
+                        await user_1.send(embed=views.embed_eatbite(ctx, player_1.times, num, eat_bite[0], eat_bite[1]))
                         self.bot.game.stage = 'player2'
                         break
 
-            if self.bot.game.stage == 'player1':
+            if self.bot.game.stage == 'player2':
                 while True:
                     """player2の処理"""
-                    await user_2.send(embed=views.embed_notification(ctx, user_1))
+                    await user_2.send(embed=views.embed_notification_turn(ctx, user_1))
                     num = await self.bot.wait_for("message", check=check_user_2, timeout=None)
                     user_2_predicted_num_tuple = game.make_tuple(num)
 
@@ -185,18 +194,23 @@ class Battlemode(commands.Cog):
                         continue
 
                     else:
-                        i_2 += 1
                         eat_bite = game.check_num(player_1.num, user_2_predicted_num_tuple)
-                        result_2[i_2] = f'{num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**'
 
                         if eat_bite[0] == 3:
                             """勝敗判定"""
-                            await user_2.send(embed=views.embed_gameend(ctx, user_2, result_2, answer_1, 'win'))
-                            await user_1.send(embed=views.embed_gameend(ctx, user_2, result_1, answer_2, 'lose'))
+                            if len(player_1.results) == 0 or len(player_2.results) == 0:
+                                """One Call"""
+                                await user_2.send(embed=views.embed_gameend_onecall(ctx, user_2, player_1.answer, 'win'))
+                                await user_1.send(embed=views.embed_gameend_onecall(ctx, user_2, player_2.answer, 'lose'))
+                            else:
+                                await user_2.send(embed=views.embed_gameend(ctx, user_2, player_2.results, player_1.answer, 'win'))
+                                await user_1.send(embed=views.embed_gameend(ctx, user_2, player_1.results, player_2.answer, 'lose'))
                             self.bot.game.stage = 'gameend'
                             break
 
-                        await user_2.send(embed=views.embed_eatbite(ctx, i_2, num, eat_bite[0], eat_bite[1]))
+                        player_2.add_times()
+                        player_2.add_result(f'{num.content} → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**')
+                        await user_2.send(embed=views.embed_eatbite(ctx, player_2.times, num, eat_bite[0], eat_bite[1]))
                         self.bot.game.stage = 'player1'
                         break
 
