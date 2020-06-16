@@ -11,7 +11,7 @@ def embed_start(ctx):
 
 
 def embed_gameplay(ctx, i, predicted_num, eat_bite):
-    embed = discord.Embed(title=f'{i}回目',
+    embed = discord.Embed(title=f'{i}ターン目',
                           description=f'「**{predicted_num.content}**」 → **{eat_bite[0]}EAT, {eat_bite[1]}BITE**\n'
                                       f'三桁の数字を入力してください↓',
                           color=ctx.author.color)
@@ -25,13 +25,13 @@ def embed_gameclear(ctx, i, answer, result: dict):
     times = 1
 
     embed = discord.Embed(title='You Win! :tada:',
-                          description=f'{i}回目でゲームクリア！\n'
+                          description=f'{i}ターン目でゲームクリア！\n'
                                       f'BOTの数字「**{answer}**」',
                           color=ctx.author.color)
     while True:
         if times == len(result):
             break
-        result_field += f'{times}回目 | {result[times]}\n'
+        result_field += f'{times}ターン目 | {result[times]}\n'
         times += 1
     embed.add_field(name=f'{ctx.author.name}さんの対戦結果', value=result_field, inline=False)
     embed.set_author(name='Numer0n(ヌメロン) - ソロモード')
@@ -40,7 +40,7 @@ def embed_gameclear(ctx, i, answer, result: dict):
 
 def embed_gameover(ctx, answer):
     embed = discord.Embed(title='You Lose! :sob:',
-                          description=f'10回以内に当てることが出来なかった。ゲームオーバー！\n'
+                          description=f'10ターン以内に当てることが出来なかった。ゲームオーバー！\n'
                                       f'BOTの数字「**{answer}**」',
                           color=ctx.author.color)
     embed.set_footer(text=f"{ctx.author}'s result", icon_url=ctx.author.avatar_url)
