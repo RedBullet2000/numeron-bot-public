@@ -5,6 +5,8 @@ class Player:
         self.times = 0
         self.results = {}
         self.answer = 0
+        self.offensive_abillity = True
+        self.defensive_abillity = True
 
     def set_num(self, num: tuple):
         self.num = num

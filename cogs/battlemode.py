@@ -4,7 +4,9 @@ from discord.ext import commands
 from cogs.utils.player import Player
 from cogs.utils.game import Game
 from cogs.utils import game
+from cogs.utils import abillity
 from cogs.utils import views_battlemode as views
+from cogs.utils import views_rule as rules
 
 
 class Battlemode(commands.Cog):
@@ -108,7 +110,7 @@ class Battlemode(commands.Cog):
                     await notice_num.add_reaction('❌')
                     reaction, reaction_user = await self.bot.wait_for('reaction_add',
                                                                       check=lambda reaction,
-                                                                                   reaction_user: reaction_user.id == player.id)
+                                                                                   reaction_user: reaction_user.id == player.id, timeout=None)
                     if reaction.emoji == '⭕':
                         await notice_num.edit(embed=views.embed_notification_selfnum(ctx, num))
                         player.set_num(user_num_tuple)
@@ -144,14 +146,68 @@ class Battlemode(commands.Cog):
                     """player1の処理"""
                     await user_1.send(embed=views.embed_notification_turn(ctx, user_2))
                     num = await self.bot.wait_for("message", check=check_user_1, timeout=None)
-                    user_1_predicted_num_tuple = game.make_tuple(num)
 
-                    if str.isdecimal(num.content) is not True:
+                    if num.content == 'abillity':
+                        if player_1.offensive_abillity is True or player_1.defensive_abillity is True:
+                            about_abillity = await user_1.send(embed=rules.embed_abillity(ctx))
+                            await about_abillity.add_reaction('🟨')
+                            await about_abillity.add_reaction('🟦')
+                            await about_abillity.add_reaction('🟪')
+                            await about_abillity.add_reaction('🟩')
+                            await about_abillity.add_reaction('🟢')
+                            await about_abillity.add_reaction('🔴')
+                            reaction, reaction_user = await self.bot.wait_for('reaction_add',
+                                                                              check=lambda reaction,
+                                                                                           reaction_user: reaction_user == user_1, timeout=None)
+                            if reaction.emoji == '🟨':
+                                player_1.offensive_abillity = False
+                                continue
+                            elif reaction.emoji == '🟦':
+                                player_1.offensive_abillity = False
+                                high_and_low = abillity.high_and_low(player_2.num)
+                                await user_1.send(f'HIGH: {high_and_low[0]}, LOW: -{high_and_low[0]}')
+                                continue
+                            elif reaction.emoji == '🟪':
+                                player_1.offensive_abillity = False
+                                index = None
+                                while True:
+                                    digit = await self.bot.wait_for("message", check=check_user_1, timeout=None)
+                                    if digit.content == '100' or digit.content == '10' or digit.content == '1':
+                                        index = game.judgement_index(digit.content)
+                                        break
+                                    else:
+                                        continue
+                                target = abillity.target(player_2, index)
+                                _digit = game.judgement_digit(target[1])
+                                await user_1.send(f'TARGET: {str(target[0])}, {_digit}')
+                                continue
+                            elif reaction.emoji == '🟩':
+                                player_1.offensive_abillity = False
+                                slash = abillity.slash(player_2.num)
+                                await user_1.send(f'SLASH NUMBER: {slash}')
+                                continue
+                            elif reaction.emoji == '🟢':
+                                player_1.defensive_abillity = False
+                                continue
+                            elif reaction.emoji == '🔴':
+                                player_1.defensive_abillity = False
+                                continue
+                            else:
+                                await user_1.send('無効なリアクションです。「abillity」と入力し直してください。')
+                                continue
+
+                        else:
+                            await user_1.send('攻撃及び防御アイテムは試合中で各1つずつしか使用できません。')
+                            continue
+
+                    elif str.isdecimal(num.content) is not True:
                         """数字でないものが入力されたら処理を中断"""
                         await user_1.send(embed=views.embed_notification_isnotnum(ctx))
                         continue
 
-                    elif game.check_duplication(user_1_predicted_num_tuple) is not True:
+                    user_1_predicted_num_tuple = game.make_tuple(num)
+
+                    if game.check_duplication(user_1_predicted_num_tuple) is not True:
                         """数字が重複したら処理を中断"""
                         await user_1.send(embed=views.embed_notification_duplication(ctx))
                         continue
@@ -186,14 +242,44 @@ class Battlemode(commands.Cog):
                     """player2の処理"""
                     await user_2.send(embed=views.embed_notification_turn(ctx, user_1))
                     num = await self.bot.wait_for("message", check=check_user_2, timeout=None)
-                    user_2_predicted_num_tuple = game.make_tuple(num)
 
-                    if str.isdecimal(num.content) is not True:
+                    if num.content == 'abillity':
+                        about_abillity = await user_2.send(embed=rules.embed_abillity(ctx))
+                        await about_abillity.add_reaction('')
+                        await about_abillity.add_reaction('')
+                        await about_abillity.add_reaction('')
+                        await about_abillity.add_reaction('')
+                        await about_abillity.add_reaction('')
+                        await about_abillity.add_reaction('')
+                        reaction, reaction_user = await self.bot.wait_for('reaction_add',
+                                                                          check=lambda reaction,
+                                                                                       reaction_user: reaction_user == user_2)
+                        if reaction.emoji == '':
+                            pass
+                        elif reaction.emoji == '':
+                            pass
+                        elif reaction.emoji == '':
+                            pass
+                        elif reaction.emoji == '':
+                            pass
+                        elif reaction.emoji == '':
+                            pass
+                        elif reaction.emoji == '':
+                            pass
+                        else:
+                            await user_1.send('無効なリアクションです。「abillity」と入力し直してください。')
+                            continue
+
+                        self.bot.game.stage = 'player2'  # もう一度数字を当てる。ターンは消費しない。
+
+                    elif str.isdecimal(num.content) is not True:
                         """数字でないものが入力されたら処理を中断"""
                         await user_2.send(embed=views.embed_notification_isnotnum(ctx))
                         continue
 
-                    elif game.check_duplication(user_2_predicted_num_tuple) is not True:
+                    user_2_predicted_num_tuple = game.make_tuple(num)
+
+                    if game.check_duplication(user_2_predicted_num_tuple) is not True:
                         """数字が重複したら処理を中断"""
                         await user_2.send(embed=views.embed_notification_duplication(ctx))
                         continue
